@@ -17,7 +17,7 @@
 // FIREBASE CONFIGURATION
 // ══════════════════════════════════════════════════════════════
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc, writeBatch, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc, writeBatch, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDtf5mWdcaAgQNAWOms3M9pZTXJw7k5T5M",
@@ -64,6 +64,53 @@ async function fbGetSetting(key) {
 window._firebase = {
   fbGetAll, fbSaveAll, fbSaveSettings, fbGetSetting, firestore
 };
+
+// ── Realtime listeners ────────────────────────────────────────
+let _listenersStarted = false;
+function startRealtimeListeners() {
+  if(_listenersStarted) return;
+  _listenersStarted = true;
+
+  onSnapshot(collection(firestore, 'companies'), snap => {
+    const data = snap.docs.map(d => d.data());
+    if(JSON.stringify(data) !== JSON.stringify(window._companies_last)) {
+      window._companies_last = data;
+      if(window.companies !== undefined) {
+        window.companies = data;
+        if(typeof window.renderCompanies === 'function') window.renderCompanies();
+        if(typeof window.refreshCompanyDropdown === 'function') window.refreshCompanyDropdown();
+      }
+    }
+  });
+
+  onSnapshot(collection(firestore, 'batches'), snap => {
+    const data = snap.docs.map(d => d.data());
+    if(JSON.stringify(data) !== JSON.stringify(window._batches_last)) {
+      window._batches_last = data;
+      if(window.batches !== undefined) {
+        window.batches = data;
+        if(typeof window.renderDashboard === 'function') window.renderDashboard();
+        if(typeof window.renderBatches === 'function') window.renderBatches();
+      }
+    }
+  });
+
+  onSnapshot(collection(firestore, 'gelatinLog'), snap => {
+    const data = snap.docs.map(d => d.data());
+    if(window.gelatinLog !== undefined) {
+      window.gelatinLog = data;
+    }
+  });
+
+  onSnapshot(collection(firestore, 'productionPlan'), snap => {
+    const data = snap.docs.map(d => d.data());
+    if(window.productionPlan !== undefined) {
+      window.productionPlan = data;
+    }
+  });
+}
+
+window._firebase.startRealtimeListeners = startRealtimeListeners;
 window._firebaseReady = true;
 window.dispatchEvent(new Event('firebaseReady'));
 </script>
@@ -1775,6 +1822,10 @@ async function resetAllData(){
 function startApp(){
   loadFromDB().then(()=>{
     renderDashboard();
+    // Start realtime sync
+    if(window._firebase.startRealtimeListeners) {
+      window._firebase.startRealtimeListeners();
+    }
   }).catch(err=>{
     console.error('Firebase Error:',err);
     initData();
