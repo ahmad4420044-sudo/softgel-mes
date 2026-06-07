@@ -2004,14 +2004,8 @@ deleteGelRecord=function(id){
   });
 };
 
-// deletePlan override handled in new function
-const _deletePlan_orig2=null; // placeholder
-const _dummy_plan=function(id){
-  confirm$('🗑️','حذف الخطة','هل تريد حذف خطة هذا الشهر؟',async()=>{
-    productionPlan=productionPlan.filter(p=>p.id!==id);
-    await saveAllPlan();
-    toast('✅ تم الحذف');renderPlan();
-};
+// deletePlan handled in new renderPlan function above
+
 
 const _doTransfer_orig=doTransfer;
 doTransfer=async function(){
