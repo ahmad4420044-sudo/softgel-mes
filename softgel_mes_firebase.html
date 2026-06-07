@@ -1911,87 +1911,11 @@ document.addEventListener('dblclick',function(e){
 },{passive:false});
 
 // ══════════════════════════════════════════════════════════════
-// ENHANCED DATA PERSISTENCE (IndexedDB + LocalStorage Backup)
+// ENHANCED DATA PERSISTENCE - Firebase only, no LocalStorage override
 // ══════════════════════════════════════════════════════════════
 
-function backupToLocalStorage(){
-  try{
-    const data=JSON.stringify({batches,companies,gelatinLog,productionPlan,nextBatchId,nextCompanyId,nextGelId,nextPlanId});
-    localStorage.setItem('softgel_mes_backup',data);
-    localStorage.setItem('softgel_mes_backup_time',new Date().toISOString());
-    console.log('✅ Backup saved to LocalStorage');
-  }catch(e){console.error('LocalStorage backup failed:',e);}
-}
-
-function restoreFromLocalStorage(){
-  try{
-    const data=localStorage.getItem('softgel_mes_backup');
-    if(!data)return false;
-    const parsed=JSON.parse(data);
-    if(parsed.batches&&parsed.batches.length>0){
-      batches=parsed.batches;
-      companies=parsed.companies||[];
-      gelatinLog=parsed.gelatinLog||[];
-      productionPlan=parsed.productionPlan||[];
-      nextBatchId=parsed.nextBatchId||batches.length+1;
-      nextCompanyId=parsed.nextCompanyId||companies.length+1;
-      nextGelId=parsed.nextGelId||gelatinLog.length+1;
-      nextPlanId=parsed.nextPlanId||productionPlan.length+1;
-      console.log('✅ Restored from LocalStorage backup');
-      return true;
-    }
-  }catch(e){console.error('LocalStorage restore failed:',e);}
-  return false;
-}
-
-// Auto-backup every 30 seconds
-setInterval(backupToLocalStorage,30000);
-
-// Backup on page hide (mobile)
-document.addEventListener('visibilitychange',()=>{
-  if(document.hidden)backupToLocalStorage();
-});
-
-// Override save functions to also backup
-const _saveAllBatches_orig=saveAllBatches;
-saveAllBatches=async function(){
-  await _saveAllBatches_orig();
-  backupToLocalStorage();
-};
-
-const _saveAllCompanies_orig=saveAllCompanies;
-saveAllCompanies=async function(){
-  await _saveAllCompanies_orig();
-  backupToLocalStorage();
-};
-
-const _saveAllGelatin_orig=saveAllGelatin;
-saveAllGelatin=async function(){
-  await _saveAllGelatin_orig();
-  backupToLocalStorage();
-};
-
-const _saveAllPlan_orig=saveAllPlan;
-saveAllPlan=async function(){
-  await _saveAllPlan_orig();
-  backupToLocalStorage();
-};
-
-// Enhanced load function with fallback
-const _loadFromDB_orig=loadFromDB;
-loadFromDB=async function(){
-  try{
-    await _loadFromDB_orig();
-  }catch(err){
-    console.error('IndexedDB failed, trying LocalStorage:',err);
-    if(!restoreFromLocalStorage()){
-      initData();
-      toast('⚠️ وضع مؤقت — البيانات غير محفوظة','error');
-    }else{
-      toast('✅ تم استعادة البيانات من النسخة الاحتياطية');
-    }
-  }
-};
+// Clear any old LocalStorage data that might interfere
+try { localStorage.removeItem('softgel_mes_backup'); } catch(e){}
 
 // Export with enhanced filename
 const _exportData_orig=exportData;
@@ -2002,7 +1926,6 @@ exportData=function(){
   a.download='softgel-mes-backup-'+new Date().toISOString().slice(0,10)+'-v5.json';
   a.click();
   toast('✅ تم تصدير البيانات');
-  backupToLocalStorage();
 };
 
 // ══════════════════════════════════════════════════════════════
