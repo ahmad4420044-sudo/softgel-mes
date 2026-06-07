@@ -395,6 +395,7 @@ input::placeholder,textarea::placeholder{color:var(--t5)}
     <div class="nav-item" onclick="goPage('companies')"><span class="nav-icon">🏭</span> الشركات</div>
     <div class="nav-item" onclick="goPage('gelatin')"><span class="nav-icon">🧪</span> تتبع الجيلاتين</div>
     <div class="nav-item" onclick="goPage('plan')"><span class="nav-icon">📅</span> الخطة الإنتاجية</div>
+    <div class="nav-item" onclick="goPage('stripping')"><span class="nav-icon">🎗️</span> التشريط</div>
     <div class="nav-item" onclick="goPage('analytics')"><span class="nav-icon">📈</span> الرسم البياني الشامل</div>
   </nav>
   <div id="sidebar-footer">Soft Gelatin MES © 2025</div>
@@ -573,6 +574,8 @@ input::placeholder,textarea::placeholder{color:var(--t5)}
 <!-- ══════════════════════════════════════════════════ PLAN -->
 <div class="page" id="page-plan">
   <div style="font-weight:800;font-size:18px;margin-bottom:18px">📅 الخطة الإنتاجية</div>
+
+  <!-- إدخال خطة شهر -->
   <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:18px;margin-bottom:18px">
     <div class="panel">
       <div class="panel-head"><span class="panel-title">➕ إدخال خطة شهر</span></div>
@@ -580,7 +583,7 @@ input::placeholder,textarea::placeholder{color:var(--t5)}
         <div class="form-row fr2" style="margin-bottom:12px">
           <div class="form-group" style="margin:0">
             <label class="form-label">السنة</label>
-            <input class="form-input" type="number" id="plan-year" value="2025"/>
+            <input class="form-input" type="number" id="plan-year" value="2026"/>
           </div>
           <div class="form-group" style="margin:0">
             <label class="form-label">الشهر</label>
@@ -592,15 +595,23 @@ input::placeholder,textarea::placeholder{color:var(--t5)}
             </select>
           </div>
         </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label">اسم المستحضر</label>
+          <input class="form-input" id="plan-product" placeholder="مثال: أوميغا 3 – 1000 مجم"/>
+        </div>
         <div class="form-row fr2" style="margin-bottom:12px">
           <div class="form-group" style="margin:0">
-            <label class="form-label">الهدف (مليون كبسولة)</label>
-            <input class="form-input" type="number" id="plan-target-caps" placeholder="مثال: 5"/>
+            <label class="form-label">الكمية (كبسولة)</label>
+            <input class="form-input" type="number" id="plan-target-caps" placeholder="مثال: 1000000" oninput="calcPlanStrips()"/>
           </div>
           <div class="form-group" style="margin:0">
-            <label class="form-label">الهدف (شريط)</label>
-            <input class="form-input" type="number" id="plan-target-strips" placeholder="مثال: 500000"/>
+            <label class="form-label">كبسولة / شريط</label>
+            <input class="form-input" type="number" id="plan-caps-per-strip" placeholder="مثال: 10" value="10" oninput="calcPlanStrips()"/>
           </div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label">الهدف (شريط) — يحسب تلقائياً</label>
+          <input class="form-input" type="number" id="plan-target-strips" placeholder="أو أدخل يدوياً"/>
         </div>
         <div class="form-row fr2" style="margin-bottom:12px">
           <div class="form-group" style="margin:0">
@@ -608,28 +619,36 @@ input::placeholder,textarea::placeholder{color:var(--t5)}
             <input class="form-input" type="number" id="plan-gelatin" placeholder="مثال: 2000"/>
           </div>
           <div class="form-group" style="margin:0">
-            <label class="form-label">عدد التشغيلات المخططة</label>
+            <label class="form-label">عدد التشغيلات</label>
             <input class="form-input" type="number" id="plan-batches-count" placeholder="مثال: 4"/>
           </div>
         </div>
-        <div class="form-group">
+        <div class="form-group" style="margin-bottom:12px">
           <label class="form-label">ملاحظات</label>
           <input class="form-input" id="plan-notes" placeholder="ملاحظات الخطة"/>
         </div>
-        <button class="btn btn-primary" onclick="addPlanMonth()">💾 حفظ خطة الشهر</button>
+        <button class="btn btn-primary" onclick="addPlanProduct()">➕ إضافة منتج للخطة</button>
       </div>
     </div>
     <div class="panel">
       <div class="panel-head">
-        <span class="panel-title">📊 الخطة السنوية</span>
-        <select class="form-select" id="plan-year-filter" style="width:100px;padding:5px 8px;font-size:11px" onchange="renderPlan()">
-          <option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option>
-        </select>
+        <span class="panel-title">📊 الخطة الشهرية</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select class="form-select" id="plan-month-filter" style="width:100px;padding:5px 8px;font-size:11px" onchange="renderPlan()">
+            <option value="1">يناير</option><option value="2">فبراير</option><option value="3">مارس</option>
+            <option value="4">أبريل</option><option value="5">مايو</option><option value="6">يونيو</option>
+            <option value="7">يوليو</option><option value="8">أغسطس</option><option value="9">سبتمبر</option>
+            <option value="10">أكتوبر</option><option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+          </select>
+          <select class="form-select" id="plan-year-filter" style="width:80px;padding:5px 8px;font-size:11px" onchange="renderPlan()">
+            <option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option>
+          </select>
+        </div>
       </div>
       <div style="overflow-x:auto">
         <table class="tbl" id="plan-tbl">
           <thead><tr>
-            <th>الشهر</th><th>الكبسول (مليون)</th><th>الشرائط</th><th>الجيلاتين (كجم)</th><th>التشغيلات</th><th>ملاحظات</th><th>حذف</th>
+            <th>المستحضر</th><th>الكبسول</th><th>الشرائط</th><th>الجيلاتين (كجم)</th><th>التشغيلات</th><th>ملاحظات</th><th>حذف</th>
           </tr></thead>
           <tbody id="plan-tbody"></tbody>
           <tfoot id="plan-tfoot"></tfoot>
@@ -638,11 +657,91 @@ input::placeholder,textarea::placeholder{color:var(--t5)}
     </div>
   </div>
   <div class="panel">
-    <div class="panel-head"><span class="panel-title">📈 الرسم البياني السنوي</span></div>
+    <div class="panel-head"><span class="panel-title">📈 الرسم البياني الشهري</span></div>
     <div class="panel-body"><canvas id="c-plan" style="max-height:300px"></canvas></div>
   </div>
-  <!-- Annual summary -->
   <div class="kpi-grid kpi-4" id="plan-kpi" style="margin-top:18px"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ STRIPPING -->
+<div class="page" id="page-stripping">
+  <div style="font-weight:800;font-size:18px;margin-bottom:18px">🎗️ التشريط</div>
+  <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:18px;margin-bottom:18px">
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">➕ إضافة تشغيلة تشريط</span></div>
+      <div class="panel-body">
+        <div class="form-row fr2" style="margin-bottom:12px">
+          <div class="form-group" style="margin:0">
+            <label class="form-label">التاريخ</label>
+            <input class="form-input" type="date" id="str-date"/>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">الوردية</label>
+            <select class="form-select" id="str-shift">
+              <option value="1">الوردية الأولى (صباح)</option>
+              <option value="2">الوردية الثانية (مساء)</option>
+              <option value="3">الوردية الثالثة (ليل)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label">المنتج (من الخطة)</label>
+          <select class="form-select" id="str-product">
+            <option value="">— اختر منتج —</option>
+          </select>
+        </div>
+        <div class="form-row fr2" style="margin-bottom:12px">
+          <div class="form-group" style="margin:0">
+            <label class="form-label">الكمية (كجم)</label>
+            <input class="form-input" type="number" id="str-kg" placeholder="مثال: 500" oninput="calcStrippingStrips()"/>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">متوسط وزن الكبسولة (مجم)</label>
+            <input class="form-input" type="number" id="str-avg-weight" placeholder="مثال: 1200" oninput="calcStrippingStrips()"/>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;background:rgba(14,165,233,0.06);border:1px solid rgba(14,165,233,0.2);border-radius:10px;padding:12px">
+          <div style="font-size:11px;color:var(--blue);font-weight:700;margin-bottom:6px">📐 الشرائط المحسوبة تلقائياً</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div>
+              <div style="font-size:10px;color:var(--t4)">عدد الكبسول</div>
+              <div style="font-weight:800;color:var(--green);font-size:16px" id="str-calc-caps">—</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--t4)">عدد الشرائط</div>
+              <div style="font-weight:800;color:var(--orange);font-size:16px" id="str-calc-strips">—</div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label">عدد الكبسولة / شريط</label>
+          <input class="form-input" type="number" id="str-caps-per-strip" placeholder="مثال: 10" value="10" oninput="calcStrippingStrips()"/>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label">المشغّل</label>
+          <input class="form-input" id="str-operator" placeholder="اسم المشغّل"/>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label">ملاحظات</label>
+          <input class="form-input" id="str-notes" placeholder="ملاحظات"/>
+        </div>
+        <button class="btn btn-primary" onclick="addStrippingRecord()">💾 حفظ التشغيلة</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="panel-title">📊 ملخص التشريط</span></div>
+      <div class="kpi-grid kpi-2" id="stripping-kpi" style="margin-bottom:16px"></div>
+      <div id="stripping-shift-summary"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><span class="panel-title">📜 سجل التشريط</span></div>
+    <div style="overflow-x:auto">
+      <table class="tbl"><thead><tr>
+        <th>#</th><th>التاريخ</th><th>الوردية</th><th>المنتج</th><th>الكيلو</th><th>متوسط الوزن (مجم)</th><th>الشرائط</th><th>المشغّل</th><th>ملاحظات</th><th>حذف</th>
+      </tr></thead><tbody id="stripping-tbl"></tbody></table>
+    </div>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════════════════ ANALYTICS -->
@@ -822,8 +921,8 @@ const MONTHS=["يناير","فبراير","مارس","أبريل","مايو","ي
 // ══════════════════════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════════════════════
-let batches=[], companies=[], gelatinLog=[], productionPlan=[];
-let nextBatchId=1, nextCompanyId=1, nextGelId=1, nextPlanId=1;
+let batches=[], companies=[], gelatinLog=[], productionPlan=[], strippingLog=[];
+let nextBatchId=1, nextCompanyId=1, nextGelId=1, nextPlanId=1, nextStrippingId=1;
 let transferCtx=null, charts={};
 
 // ══════════════════════════════════════════════════════════════
@@ -918,7 +1017,7 @@ function closeConfirm(){document.getElementById('confirm-ov').classList.remove('
 // ══════════════════════════════════════════════════════════════
 // NAVIGATION
 // ══════════════════════════════════════════════════════════════
-const PAGE_TITLES={dashboard:"📊 لوحة التحكم",batches:"📋 إدارة التشغيلات",transfer:"🔄 الترحيل",track:"🔍 تتبع برقم الباتش",companies:"🏭 الشركات",gelatin:"🧪 تتبع الجيلاتين",plan:"📅 الخطة الإنتاجية",analytics:"📈 الرسم البياني الشامل"};
+const PAGE_TITLES={dashboard:"📊 لوحة التحكم",batches:"📋 إدارة التشغيلات",transfer:"🔄 الترحيل",track:"🔍 تتبع برقم الباتش",companies:"🏭 الشركات",gelatin:"🧪 تتبع الجيلاتين",plan:"📅 الخطة الإنتاجية",stripping:"🎗️ التشريط",analytics:"📈 الرسم البياني الشامل"};
 function goPage(p){
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
@@ -932,6 +1031,7 @@ function goPage(p){
   if(p==='companies')renderCompanies();
   if(p==='gelatin')renderGelatin();
   if(p==='plan')renderPlan();
+  if(p==='stripping')renderStripping();
   if(p==='analytics')renderAnalytics();
 }
 
@@ -1496,76 +1596,230 @@ function deleteGelRecord(id){
 // ══════════════════════════════════════════════════════════════
 // PRODUCTION PLAN
 // ══════════════════════════════════════════════════════════════
-function renderPlan(){
-  const yr=parseInt(document.getElementById('plan-year-filter').value)||2025;
-  const data=productionPlan.filter(p=>p.year===yr).sort((a,b)=>a.month-b.month);
-
-  // Annual KPI
-  const annCaps=data.reduce((s,p)=>s+p.targetCaps,0);
-  const annStrips=data.reduce((s,p)=>s+p.targetStrips,0);
-  const annGel=data.reduce((s,p)=>s+p.gelatin,0);
-  const annBatches=data.reduce((s,p)=>s+p.batchCount,0);
-  document.getElementById('plan-kpi').innerHTML=[
-    {l:"مجموع الكبسول السنوي",v:annCaps+" مليون",c:"#10B981",icon:"💊"},
-    {l:"مجموع الشرائط السنوي",v:annStrips.toLocaleString('ar-EG'),c:"#F97316",icon:"📦"},
-    {l:"مجموع الجيلاتين السنوي",v:annGel.toLocaleString('ar-EG')+" كجم",c:"#0EA5E9",icon:"🧪"},
-    {l:"مجموع التشغيلات السنوية",v:annBatches,c:"#8B5CF6",icon:"📋"},
-  ].map(k=>`<div class="kpi-card" style="background:linear-gradient(135deg,rgba(${rgb(k.c)},.12),rgba(${rgb(k.c)},.03));border-color:rgba(${rgb(k.c)},.25)">
-    <div style="font-size:10px;color:var(--t4);font-weight:700;margin-bottom:6px;text-transform:uppercase">${k.l}</div>
-    <div style="font-size:26px;font-weight:900;color:${k.c}">${k.v}</div>
-  </div>`).join('');
-
-  document.getElementById('plan-tbody').innerHTML=data.map(p=>`<tr>
-    <td style="font-weight:700;color:var(--t1)">${MONTHS[p.month-1]}</td>
-    <td style="color:var(--green);font-weight:700">${p.targetCaps}</td>
-    <td style="color:var(--orange);font-weight:700">${p.targetStrips.toLocaleString('ar-EG')}</td>
-    <td style="color:var(--blue);font-weight:700">${p.gelatin.toLocaleString('ar-EG')}</td>
-    <td style="color:#8B5CF6;font-weight:700">${p.batchCount}</td>
-    <td style="color:var(--t4);font-size:11px">${p.notes||'—'}</td>
-    <td><button class="btn btn-danger btn-xs" onclick="deletePlan(${p.id})">🗑️</button></td>
-  </tr>`).join('')||`<tr><td colspan="7" style="padding:30px;text-align:center;color:var(--t5)">لا توجد خطة لهذا العام</td></tr>`;
-
-  document.getElementById('plan-tfoot').innerHTML=data.length?`<tr style="background:rgba(249,168,37,.08);font-weight:800">
-    <td style="padding:10px 14px;color:var(--gold)">المجموع السنوي</td>
-    <td style="padding:10px 14px;color:var(--green)">${annCaps}</td>
-    <td style="padding:10px 14px;color:var(--orange)">${annStrips.toLocaleString('ar-EG')}</td>
-    <td style="padding:10px 14px;color:var(--blue)">${annGel.toLocaleString('ar-EG')}</td>
-    <td style="padding:10px 14px;color:#8B5CF6">${annBatches}</td>
-    <td colspan="2"></td>
-  </tr>`:'';
-
-  destroyC('plan');
-  charts['plan']=new Chart(document.getElementById('c-plan'),{type:'bar',
-    data:{labels:data.map(p=>MONTHS[p.month-1]),datasets:[
-      {label:'الكبسول (مليون)',data:data.map(p=>p.targetCaps),backgroundColor:'rgba(16,185,129,.7)',borderRadius:4,yAxisID:'y'},
-      {label:'الشرائط (ألف)',data:data.map(p=>p.targetStrips/1000),backgroundColor:'rgba(249,115,22,.7)',borderRadius:4,yAxisID:'y'},
-      {label:'الجيلاتين (كجم)',data:data.map(p=>p.gelatin),type:'line',borderColor:'#0EA5E9',backgroundColor:'rgba(14,165,233,.1)',fill:true,tension:.4,pointRadius:4,yAxisID:'y2'},
-    ]},
-    options:{responsive:true,plugins:{legend:{labels:{color:'#94A3B8',font:{size:11}}}},
-      scales:{x:{ticks:{color:T},grid:{color:C}},y:{ticks:{color:T},grid:{color:C},position:'right'},y2:{ticks:{color:'#0EA5E9'},grid:{display:false},position:'left'}}}
-  });
+// ── Plan helpers ─────────────────────────────────────────────
+function calcPlanStrips(){
+  const caps=parseFloat(document.getElementById('plan-target-caps').value)||0;
+  const perStrip=parseInt(document.getElementById('plan-caps-per-strip').value)||10;
+  if(caps>0&&perStrip>0){
+    document.getElementById('plan-target-strips').value=Math.floor(caps/perStrip);
+  }
 }
 
-function addPlanMonth(){
-  const yr=parseInt(document.getElementById('plan-year').value)||2025;
+function addPlanProduct(){
+  const yr=parseInt(document.getElementById('plan-year').value)||2026;
   const mo=parseInt(document.getElementById('plan-month').value)||1;
+  const product=document.getElementById('plan-product').value.trim();
   const tc=parseFloat(document.getElementById('plan-target-caps').value)||0;
   const ts=parseInt(document.getElementById('plan-target-strips').value)||0;
   const gel=parseFloat(document.getElementById('plan-gelatin').value)||0;
   const bc=parseInt(document.getElementById('plan-batches-count').value)||0;
   const notes=document.getElementById('plan-notes').value.trim();
-  if(!tc&&!ts){toast('⚠️ أدخل الكبسول أو الشرائط المستهدفة','error');return;}
-  const existing=productionPlan.findIndex(p=>p.year===yr&&p.month===mo);
-  if(existing>=0){productionPlan[existing]={...productionPlan[existing],targetCaps:tc,targetStrips:ts,gelatin:gel,batchCount:bc,notes};}
-  else{productionPlan.push({id:nextPlanId++,year:yr,month:mo,targetCaps:tc,targetStrips:ts,gelatin:gel,batchCount:bc,notes});}
+  if(!product){toast('⚠️ أدخل اسم المستحضر','error');return;}
+  if(!tc&&!ts){toast('⚠️ أدخل الكمية المستهدفة','error');return;}
+  productionPlan.push({id:nextPlanId++,year:yr,month:mo,product,targetCaps:tc,targetStrips:ts,gelatin:gel,batchCount:bc,notes});
+  ['plan-product','plan-target-caps','plan-target-strips','plan-gelatin','plan-batches-count','plan-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('plan-caps-per-strip').value='10';
+  document.getElementById('plan-month-filter').value=mo;
   document.getElementById('plan-year-filter').value=yr;
-  toast('✅ تم حفظ خطة الشهر');renderPlan();
+  toast('✅ تم إضافة المنتج للخطة');
+  saveAllPlan();
+  renderPlan();
+}
+
+function renderPlan(){
+  const yr=parseInt(document.getElementById('plan-year-filter').value)||2026;
+  const mo=parseInt(document.getElementById('plan-month-filter').value)||1;
+  const data=productionPlan.filter(p=>p.year===yr&&p.month===mo);
+  const allMonthData=productionPlan.filter(p=>p.year===yr);
+
+  // KPI for selected month
+  const totCaps=data.reduce((s,p)=>s+(p.targetCaps||0),0);
+  const totStrips=data.reduce((s,p)=>s+(p.targetStrips||0),0);
+  const totGel=data.reduce((s,p)=>s+(p.gelatin||0),0);
+  const totBatches=data.reduce((s,p)=>s+(p.batchCount||0),0);
+
+  document.getElementById('plan-kpi').innerHTML=[
+    {l:"الكبسول الكلي للشهر",v:fN(totCaps)+" كبسولة",c:"#10B981",icon:"💊"},
+    {l:"الشرائط الكلية للشهر",v:fN(totStrips)+" شريط",c:"#F97316",icon:"📦"},
+    {l:"الجيلاتين المخطط",v:fN(totGel)+" كجم",c:"#0EA5E9",icon:"🧪"},
+    {l:"إجمالي التشغيلات",v:totBatches,c:"#8B5CF6",icon:"📋"},
+  ].map(k=>`<div class="kpi-card" style="background:linear-gradient(135deg,rgba(${rgb(k.c)},.12),rgba(${rgb(k.c)},.03));border-color:rgba(${rgb(k.c)},.25)">
+    <div style="font-size:10px;color:var(--t4);font-weight:700;margin-bottom:6px;text-transform:uppercase">${k.l}</div>
+    <div style="font-size:22px;font-weight:900;color:${k.c}">${k.v}</div>
+  </div>`).join('');
+
+  document.getElementById('plan-tbody').innerHTML=data.map(p=>`<tr>
+    <td style="font-weight:700;color:var(--t1)">${p.product||'—'}</td>
+    <td style="color:var(--green);font-weight:700">${fN(p.targetCaps)}</td>
+    <td style="color:var(--orange);font-weight:700">${fN(p.targetStrips)}</td>
+    <td style="color:var(--blue);font-weight:700">${fN(p.gelatin)}</td>
+    <td style="color:#8B5CF6;font-weight:700">${p.batchCount||0}</td>
+    <td style="color:var(--t4);font-size:11px">${p.notes||'—'}</td>
+    <td><button class="btn btn-danger btn-xs" onclick="deletePlan(${p.id})">🗑️</button></td>
+  </tr>`).join('')||`<tr><td colspan="7" style="padding:30px;text-align:center;color:var(--t5)">لا توجد منتجات لهذا الشهر</td></tr>`;
+
+  document.getElementById('plan-tfoot').innerHTML=data.length?`<tr style="background:rgba(249,168,37,.08);font-weight:800">
+    <td style="padding:10px 14px;color:var(--gold)">المجموع</td>
+    <td style="padding:10px 14px;color:var(--green)">${fN(totCaps)}</td>
+    <td style="padding:10px 14px;color:var(--orange)">${fN(totStrips)}</td>
+    <td style="padding:10px 14px;color:var(--blue)">${fN(totGel)}</td>
+    <td style="padding:10px 14px;color:#8B5CF6">${totBatches}</td>
+    <td colspan="2"></td>
+  </tr>`:'';
+
+  // Chart - monthly summary for year
+  const monthSummary=Array.from({length:12},(_,i)=>{
+    const mData=allMonthData.filter(p=>p.month===i+1);
+    return{
+      strips:mData.reduce((s,p)=>s+(p.targetStrips||0),0),
+      caps:mData.reduce((s,p)=>s+(p.targetCaps||0),0),
+    };
+  });
+  destroyC('plan');
+  charts['plan']=new Chart(document.getElementById('c-plan'),{type:'bar',
+    data:{labels:MONTHS,datasets:[
+      {label:'الشرائط المخططة',data:monthSummary.map(m=>m.strips),backgroundColor:'rgba(249,115,22,.7)',borderRadius:4},
+      {label:'الكبسول المخطط',data:monthSummary.map(m=>m.caps),backgroundColor:'rgba(16,185,129,.5)',borderRadius:4},
+    ]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#94A3B8',font:{size:11}}}},
+      scales:{x:{ticks:{color:T,font:{size:9}},grid:{color:C}},y:{ticks:{color:T},grid:{color:C}}}}
+  });
+
+  // Refresh stripping product dropdown
+  refreshStrippingProductDropdown();
 }
 
 function deletePlan(id){
-  confirm$('🗑️','حذف الخطة','هل تريد حذف خطة هذا الشهر؟',()=>{
-    productionPlan=productionPlan.filter(p=>p.id!==id);toast('✅ تم الحذف');renderPlan();
+  confirm$('🗑️','حذف المنتج','هل تريد حذف هذا المنتج من الخطة؟',()=>{
+    productionPlan=productionPlan.filter(p=>p.id!==id);
+    saveAllPlan();
+    toast('✅ تم الحذف');renderPlan();
   });
+}
+
+// ══════════════════════════════════════════════════════════════
+// STRIPPING
+// ══════════════════════════════════════════════════════════════
+const SHIFT_NAMES={1:'الوردية الأولى (صباح)',2:'الوردية الثانية (مساء)',3:'الوردية الثالثة (ليل)'};
+
+function refreshStrippingProductDropdown(){
+  const products=[...new Set(productionPlan.map(p=>p.product).filter(Boolean))];
+  const el=document.getElementById('str-product');
+  if(!el)return;
+  el.innerHTML='<option value="">— اختر منتج —</option>'+products.map(p=>`<option value="${p}">${p}</option>`).join('');
+}
+
+function calcStrippingStrips(){
+  const kg=parseFloat(document.getElementById('str-kg').value)||0;
+  const avgMg=parseFloat(document.getElementById('str-avg-weight').value)||0;
+  const perStrip=parseInt(document.getElementById('str-caps-per-strip').value)||10;
+  if(kg>0&&avgMg>0){
+    const caps=Math.floor((kg*1000000)/avgMg);
+    const strips=Math.floor(caps/perStrip);
+    document.getElementById('str-calc-caps').textContent=fN(caps);
+    document.getElementById('str-calc-strips').textContent=fN(strips);
+  } else {
+    document.getElementById('str-calc-caps').textContent='—';
+    document.getElementById('str-calc-strips').textContent='—';
+  }
+}
+
+function addStrippingRecord(){
+  const date=document.getElementById('str-date').value;
+  const shift=parseInt(document.getElementById('str-shift').value)||1;
+  const product=document.getElementById('str-product').value.trim();
+  const kg=parseFloat(document.getElementById('str-kg').value)||0;
+  const avgWeight=parseFloat(document.getElementById('str-avg-weight').value)||0;
+  const perStrip=parseInt(document.getElementById('str-caps-per-strip').value)||10;
+  const operator=document.getElementById('str-operator').value.trim();
+  const notes=document.getElementById('str-notes').value.trim();
+  if(!date||!kg||!avgWeight){toast('⚠️ أدخل التاريخ والكيلو ومتوسط الوزن','error');return;}
+  const caps=Math.floor((kg*1000000)/avgWeight);
+  const strips=Math.floor(caps/perStrip);
+  strippingLog.push({id:nextStrippingId++,date,shift,product,kg,avgWeight,perStrip,caps,strips,operator,notes});
+  ['str-date','str-kg','str-avg-weight','str-operator','str-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('str-caps-per-strip').value='10';
+  document.getElementById('str-calc-caps').textContent='—';
+  document.getElementById('str-calc-strips').textContent='—';
+  toast('✅ تم حفظ التشغيلة');
+  saveAllStripping();
+  renderStripping();
+}
+
+function deleteStrippingRecord(id){
+  confirm$('🗑️','حذف التشغيلة','هل تريد حذف هذه التشغيلة؟',()=>{
+    strippingLog=strippingLog.filter(s=>s.id!==id);
+    saveAllStripping();
+    toast('✅ تم الحذف');renderStripping();
+  });
+}
+
+function renderStripping(){
+  refreshStrippingProductDropdown();
+  const totalKg=strippingLog.reduce((s,r)=>s+r.kg,0);
+  const totalStrips=strippingLog.reduce((s,r)=>s+r.strips,0);
+  const totalCaps=strippingLog.reduce((s,r)=>s+r.caps,0);
+
+  document.getElementById('stripping-kpi').innerHTML=[
+    {l:"إجمالي الكيلو",v:fN(totalKg)+" كجم",c:"#0EA5E9"},
+    {l:"إجمالي الشرائط",v:fN(totalStrips)+" شريط",c:"#F97316"},
+    {l:"إجمالي الكبسول",v:fN(totalCaps)+" كبسولة",c:"#10B981"},
+    {l:"عدد التشغيلات",v:strippingLog.length,c:"#8B5CF6"},
+  ].map(k=>`<div class="kpi-card" style="background:linear-gradient(135deg,rgba(${rgb(k.c)},.12),rgba(${rgb(k.c)},.03));border-color:rgba(${rgb(k.c)},.25)">
+    <div style="font-size:10px;color:var(--t4);font-weight:700;margin-bottom:6px">${k.l}</div>
+    <div style="font-size:22px;font-weight:900;color:${k.c}">${k.v}</div>
+  </div>`).join('');
+
+  // Summary by shift
+  const shiftSummary=[1,2,3].map(sh=>{
+    const recs=strippingLog.filter(r=>r.shift===sh);
+    return{shift:sh,count:recs.length,kg:recs.reduce((s,r)=>s+r.kg,0),strips:recs.reduce((s,r)=>s+r.strips,0)};
+  });
+  document.getElementById('stripping-shift-summary').innerHTML=`
+    <div style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:10px">ملخص الورديات</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+    ${shiftSummary.map(s=>`<div style="background:rgba(14,165,233,0.06);border:1px solid rgba(14,165,233,0.15);border-radius:10px;padding:12px;text-align:center">
+      <div style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:8px">${SHIFT_NAMES[s.shift]}</div>
+      <div style="font-size:10px;color:var(--t4)">تشغيلات: <span style="color:var(--t1);font-weight:700">${s.count}</span></div>
+      <div style="font-size:10px;color:var(--t4)">كيلو: <span style="color:var(--blue);font-weight:700">${fN(s.kg)}</span></div>
+      <div style="font-size:10px;color:var(--t4)">شرائط: <span style="color:var(--orange);font-weight:700">${fN(s.strips)}</span></div>
+    </div>`).join('')}
+    </div>`;
+
+  // Table
+  document.getElementById('stripping-tbl').innerHTML=strippingLog.map((r,i)=>`<tr>
+    <td style="color:var(--t4)">${i+1}</td>
+    <td style="color:var(--t3)">${r.date}</td>
+    <td style="color:var(--blue);font-weight:700">${SHIFT_NAMES[r.shift]||r.shift}</td>
+    <td style="color:var(--t1)">${r.product||'—'}</td>
+    <td style="color:var(--blue);font-weight:700">${fN(r.kg)} كجم</td>
+    <td style="color:#8B5CF6">${fN(r.avgWeight)} مجم</td>
+    <td style="color:var(--orange);font-weight:700">${fN(r.strips)}</td>
+    <td style="color:var(--t3)">${r.operator||'—'}</td>
+    <td style="color:var(--t4);font-size:11px">${r.notes||'—'}</td>
+    <td><button class="btn btn-danger btn-xs" onclick="deleteStrippingRecord(${r.id})">🗑️</button></td>
+  </tr>`).join('')||`<tr><td colspan="10" style="padding:30px;text-align:center;color:var(--t5)">لا يوجد سجل تشريط</td></tr>`;
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// PACKAGING — تعبئة وتغليف
+// ══════════════════════════════════════════════════════════════
+function calcPackagingBoxes(strips, stripsPerBox){
+  if(!strips||!stripsPerBox)return 0;
+  return Math.floor(strips/stripsPerBox);
+}
+
+function renderPackagingCalc(batchId){
+  const b=batches.find(x=>x.id===batchId);if(!b)return;
+  const pkgStage=b.stages[7]; // التعبئة والتغليف index 7
+  const strips=pkgStage.outputQty||pkgStage.inputQty||0;
+  const el=document.getElementById('pkg-calc-'+batchId);
+  if(!el)return;
+  const stripsPerBox=parseInt(el.querySelector('.pkg-strips-per-box')?.value)||1;
+  const boxes=calcPackagingBoxes(strips,stripsPerBox);
+  const boxEl=el.querySelector('.pkg-boxes-result');
+  if(boxEl)boxEl.textContent=fN(boxes)+' علبة';
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1620,6 +1874,7 @@ async function saveAll(){
   await saveAllCompanies();
   await saveAllGelatin();
   await saveAllPlan();
+  await saveAllStripping();
 }
 
 async function saveAllBatches(){
@@ -1642,33 +1897,42 @@ async function saveAllPlan(){
   await db.fbSaveAll('productionPlan', productionPlan);
   await db.fbSaveSettings('nextPlanId', nextPlanId);
 }
+async function saveAllStripping(){
+  const db=getDB();
+  await db.fbSaveAll('strippingLog', strippingLog);
+  await db.fbSaveSettings('nextStrippingId', nextStrippingId);
+}
 
 // ── Load from DB ──────────────────────────────────────────────
 async function loadFromDB(){
   const db=getDB();
   showDBStatus('⏳ جاري تحميل البيانات من السحابة...');
-  const [b,c,g,p]=await Promise.all([
+  const [b,c,g,p,sl]=await Promise.all([
     db.fbGetAll('batches'),
     db.fbGetAll('companies'),
     db.fbGetAll('gelatinLog'),
     db.fbGetAll('productionPlan'),
+    db.fbGetAll('strippingLog'),
   ]);
-  const [nbId,ncId,ngId,npId]=await Promise.all([
+  const [nbId,ncId,ngId,npId,nsId]=await Promise.all([
     db.fbGetSetting('nextBatchId'),
     db.fbGetSetting('nextCompanyId'),
     db.fbGetSetting('nextGelId'),
     db.fbGetSetting('nextPlanId'),
+    db.fbGetSetting('nextStrippingId'),
   ]);
 
-  if(b.length||c.length){
+  if(b.length||c.length||p.length){
     batches=b;
     companies=c;
     gelatinLog=g;
     productionPlan=p;
+    strippingLog=sl||[];
     nextBatchId   = nbId || (b.length ? Math.max(...b.map(x=>x.id))+1 : 1);
     nextCompanyId = ncId || (c.length ? Math.max(...c.map(x=>x.id))+1 : 1);
     nextGelId     = ngId || (g.length ? Math.max(...g.map(x=>x.id))+1 : 1);
     nextPlanId    = npId || (p.length ? Math.max(...p.map(x=>x.id))+1 : 1);
+    nextStrippingId = nsId || (sl&&sl.length ? Math.max(...sl.map(x=>x.id))+1 : 1);
     showDBStatus('✅ تم تحميل البيانات من السحابة ('+(b.length)+' تشغيلة)');
   } else {
     initData();
@@ -1740,20 +2004,13 @@ deleteGelRecord=function(id){
   });
 };
 
-const _addPlanMonth_orig=addPlanMonth;
-addPlanMonth=async function(){
-  _addPlanMonth_orig();
-  await saveAllPlan();
-  showDBStatus('💾 تم الحفظ');
-};
-
-const _deletePlan_orig=deletePlan;
-deletePlan=function(id){
+// deletePlan override handled in new function
+const _deletePlan_orig2=null; // placeholder
+const _dummy_plan=function(id){
   confirm$('🗑️','حذف الخطة','هل تريد حذف خطة هذا الشهر؟',async()=>{
     productionPlan=productionPlan.filter(p=>p.id!==id);
     await saveAllPlan();
     toast('✅ تم الحذف');renderPlan();
-  });
 };
 
 const _doTransfer_orig=doTransfer;
