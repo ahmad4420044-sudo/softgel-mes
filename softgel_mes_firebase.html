@@ -393,18 +393,23 @@ function checkPwd(){
   const val=document.getElementById('pwd-input').value.trim();
   if(val==='732'){
     document.getElementById('pwd-screen').style.display='none';
-    sessionStorage.setItem('softgel_auth','1');
+    localStorage.setItem('softgel_auth','732');
   } else {
     document.getElementById('pwd-error').style.display='block';
     document.getElementById('pwd-input').value='';
     setTimeout(()=>document.getElementById('pwd-error').style.display='none',2000);
   }
 }
-// Auto-hide if already authenticated in this session
-if(sessionStorage.getItem('softgel_auth')==='1'){
+// Auto-hide if already authenticated
+if(localStorage.getItem('softgel_auth')==='732'){
   document.addEventListener('DOMContentLoaded',()=>{
     const s=document.getElementById('pwd-screen');
     if(s)s.style.display='none';
+  });
+} else {
+  document.addEventListener('DOMContentLoaded',()=>{
+    const s=document.getElementById('pwd-screen');
+    if(s)s.style.display='flex';
   });
 }
 </script>
