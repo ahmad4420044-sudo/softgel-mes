@@ -973,31 +973,17 @@ let transferCtx=null, charts={};
 // INIT DATA
 // ══════════════════════════════════════════════════════════════
 function initData(){
-  companies=[
-    {id:1,code:"CO-001",name:"شركة الدواء الحديثة",contact:"أحمد السيد",phone:"0501234567",notes:""},
-    {id:2,code:"CO-002",name:"مصنع الصحة المتحدة", contact:"فاطمة علي",  phone:"0502345678",notes:""},
-  ];
-  nextCompanyId=3;
-  batches=[
-    makeBatch(1,"أوميغا 3 – 1000 مجم","SG-2025-001",1000000,1000,1400,10,1400,700,1,"أحمد محمد",4,"2025-05-01"),
-    makeBatch(2,"فيتامين E – 400 وحدة","SG-2025-002",500000,400,900,10,630,360,2,"فاطمة علي",7,"2025-05-05"),
-    makeBatch(3,"زيت السمك – 500 مجم","SG-2025-003",750000,500,1100,10,990,640,1,"محمد خالد",2,"2025-05-10"),
-  ];
-  nextBatchId=4;
-  gelatinLog=[
-    {id:1,batchId:1,drawnKg:1350,date:"2025-05-01",source:"مستودع A",notes:""},
-    {id:2,batchId:2,drawnKg:640, date:"2025-05-05",source:"مستودع A",notes:""},
-    {id:3,batchId:3,drawnKg:1010,date:"2025-05-10",source:"مستودع B",notes:""},
-  ];
-  nextGelId=4;
-  productionPlan=[
-    {id:1,year:2025,month:1,targetCaps:4,targetStrips:400000,gelatin:1800,batchCount:3,notes:""},
-    {id:2,year:2025,month:2,targetCaps:5,targetStrips:500000,gelatin:2200,batchCount:4,notes:""},
-    {id:3,year:2025,month:3,targetCaps:4.5,targetStrips:450000,gelatin:2000,batchCount:3,notes:""},
-    {id:4,year:2025,month:4,targetCaps:6,targetStrips:600000,gelatin:2600,batchCount:4,notes:""},
-    {id:5,year:2025,month:5,targetCaps:5,targetStrips:500000,gelatin:2200,batchCount:4,notes:"العيد"},
-  ];
-  nextPlanId=6;
+  // بيانات فارغة - لا توجد بيانات تجريبية
+  companies=[];
+  batches=[];
+  gelatinLog=[];
+  productionPlan=[];
+  strippingLog=[];
+  nextBatchId=1;
+  nextCompanyId=1;
+  nextGelId=1;
+  nextPlanId=1;
+  nextStrippingId=1;
 }
 
 function makeBatch(id,product,batchNo,targetCaps,doseM,cwM,perStrip,gelatinKg,massKg,companyId,operator,doneCount,startDate){
